@@ -93,7 +93,7 @@ I used the lecture’s **unscaled dot-product attention** method to calculate th
 | File | Description |
 | --- | --- |
 | `README.md` | Assignment overview, answers, learning outcomes, and run instructions |
-| `your-notebook.ipynb` | Commented Python source code for the programming exercises |
+| `Home Assignment 4_SuruchiMaharjan_700797006.ipynb` | Commented Python source code for the programming exercises |
 
 ## Reference
 
