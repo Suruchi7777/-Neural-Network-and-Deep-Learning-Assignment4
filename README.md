@@ -11,39 +11,31 @@
 
 ## Overview
 
-This assignment explores natural language processing (NLP) preprocessing and attention in Transformer models. It includes written answers about sequence-to-sequence models and Transformer architecture, two Python programming exercises, and a step-by-step self-attention calculation based on the lecture slides.
-
-## Questions and Answers
-
-### Part I. Short Answer Questions
-
-1. **How do sequence-to-sequence models use attention?**  
-   The encoder represents the source sentence, and the decoder generates the target sentence one token at a time. Attention lets the decoder access the encoder’s hidden states at each decoding step, reducing the information bottleneck of a single fixed-length context vector.
-
-2. **What is the difference between hard and soft attention?**  
-   Hard attention makes a discrete selection, while soft attention combines hidden states using attention weights. Soft attention is differentiable, which makes it easier to train with backpropagation. For the exercise, the dot-product scores are `[1, 0, 1]`, the rounded softmax weights are `[0.422, 0.155, 0.422]`, and the context vector is `[0.845, 0.578]` when calculated using the unrounded weights.
-
-3. **How does self-attention use queries, keys, and values?**  
-   Self-attention relates tokens within the same sequence. A query is compared with the keys to compute attention scores. These scores determine the weights used to combine the value vectors. This allows distant words to influence each other’s representations.
-
-4. **How does multi-head attention work?**  
-   Multiple attention heads learn different patterns of relationships between tokens. With an embedding dimension of 512 and eight equally sized heads, each head has `512 / 8 = 64` dimensions. The head outputs are concatenated and passed through a learned output projection.
-
-5. **Why do Transformers use positional encodings and causal masks?**  
-   Positional encodings provide token order. A causal mask prevents decoder positions from attending to future tokens. Transformers can process known positions in parallel during training, while autoregressive generation produces one token at a time.
+This notebook contains two Python exercises. The first shows how an NLP preprocessing pipeline turns a sentence into a list of word stems. The second implements scaled dot-product attention and shows how queries and keys determine the contribution of each value vector to the output.
 
 ### Part II. Programming Questions
 
 #### Q1. NLP Preprocessing Pipeline
+The input sentence is “NLP techniques are used in virtual assistants like Alexa and Siri.”
 
-The Python function tokenizes the sample sentence into words and punctuation, removes punctuation and common English stopwords, and applies the Porter stemmer. It prints the original tokens, the filtered tokens, and the final stems.
+The pipeline starts by splitting the sentence into words and punctuation using NLTK’s `wordpunct_tokenize`. The period appears as a separate token in the first output. The filtering step then removes punctuation and common English stopwords. Each word is checked against the stopword list in lowercase, while the filtered list preserves the original capitalization.
 
-- **Stemming vs. lemmatization** — Stemming applies rules to shorten words, while lemmatization uses grammatical information to find a dictionary form. Both can reduce `running` to `run` when it is used as a verb.
-- **When stopword removal helps** — It can reduce the number of features in a bag-of-words model. It can also remove meaningful words. For example, removing `not` from `not good` changes the sentiment.
+The final step applies NLTK’s Porter stemmer to the filtered words. Stemming reduces words to a shorter form, such as `assistants` to `assist`. Some stems, such as `techniqu`, are useful for grouping related word forms even though they are not dictionary words.
+
+### Output
+
+```text
+Original Tokens: ['NLP', 'techniques', 'are', 'used', 'in', 'virtual', 'assistants', 'like', 'Alexa', 'and', 'Siri', '.']
+Tokens Without Stopwords: ['NLP', 'techniques', 'used', 'virtual', 'assistants', 'like', 'Alexa', 'Siri']
+Stemmed Words: ['nlp', 'techniqu', 'use', 'virtual', 'assist', 'like', 'alexa', 'siri']
+```
 
 #### Q2. Scaled Dot-Product Attention
+The attention function takes three matrices: queries (`Q`), keys (`K`), and values (`V`). The product `Q @ K.T` compares each query with each key. Each key in this example has four elements, so the scores are divided by `sqrt(4) = 2`. The raw score matrix `[[2, 0], [0, 2]]` becomes `[[1, 0], [0, 1]]` after scaling.
 
-The NumPy function computes `Q @ K.T`, divides the scores by the square root of the key dimension, applies softmax to each row, and multiplies the attention weights by `V`. Scaling helps keep large dot products from making the softmax weights overly concentrated.
+Softmax converts each row of scores into attention weights. The calculation subtracts the maximum score in each row before exponentiating to improve numerical stability. Multiplying the attention weights by `V` produces one weighted combination of the value vectors for each query. The matrices below are rounded to four decimal places for display.
+
+### Output
 
 ```text
 Attention weights
@@ -55,9 +47,10 @@ Final output
  [3.9242 4.9242 5.9242 6.9242]]
 ```
 
-### Part III. Self-Attention Calculation
+## Results
 
-I used the lecture’s **unscaled dot-product attention** method to calculate the third token’s new representation. The raw scores are `[4, 12, 10]`. After applying softmax, I rounded the weights to one decimal place, giving `[0.0, 0.9, 0.1]`. The weighted sum of the value vectors is `[2.0, 7.8, 0.3]`.
+- **Question 1** — Tokenization produced 12 tokens, including the period. Filtering removed `are`, `in`, `and`, and the period, leaving 8 words. Stemming transformed those 8 words without changing the number of tokens.
+- **Question 2** — Each row of the attention weights sums to 1. The first query assigns about 73% of its weight to `[1, 2, 3, 4]`, so its output is closer to that vector. The second query assigns about 73% of its weight to `[5, 6, 7, 8]`, so its output is closer to the second vector.
 
 ## What I Learned
 
